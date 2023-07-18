@@ -7,20 +7,13 @@ import java.net.Socket;
 public class MyClientApp {
 
     public static void main(String[] args) {
-        if (args.length != 4) {
-            System.out.println("Usage: java MyClientApp <server_ip> <port> <role> <topic>");
+        if (args.length != 2) {
+            System.out.println("Usage: java MyClientApp <server_ip> <port>");
             System.exit(1);
         }
 
         String serverIp = args[0];
         int port = Integer.parseInt(args[1]);
-        String role = args[2].toUpperCase();
-        String topic = args[3];
-
-        if (!role.equals("PUBLISHER") && !role.equals("SUBSCRIBER")) {
-            System.out.println("Invalid role. Available roles: PUBLISHER, SUBSCRIBER");
-            System.exit(1);
-        }
 
         try {
             Socket socket = new Socket(serverIp, port);
@@ -29,9 +22,6 @@ public class MyClientApp {
             BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-            out.println(role);
-            out.println(topic);
 
             Thread receiverThread = new Thread(() -> {
                 try {

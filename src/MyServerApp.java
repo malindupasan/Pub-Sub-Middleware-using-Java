@@ -4,13 +4,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class MyServerApp {
-    private static Map<String, List<ClientHandler>> topicSubscribers = new HashMap<>();
 
     public static void main(String[] args) {
         if (args.length != 1) {
@@ -41,8 +36,6 @@ public class MyServerApp {
         private Socket clientSocket;
         private PrintWriter out;
         private BufferedReader in;
-        private String role;
-        private String topic;
 
         public ClientHandler(Socket clientSocket) {
             this.clientSocket = clientSocket;
@@ -54,19 +47,9 @@ public class MyServerApp {
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
 
-                role = in.readLine();
-                topic = in.readLine();
-
-                if (role.equals("SUBSCRIBER")) {
-                    addSubscriber(topic);
-                }
-
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
                     System.out.println("Received from client: " + inputLine);
-                    if (role.equals("PUBLISHER")) {
-                        publishMessage(inputLine, topic);
-                    }
                     if (inputLine.equals("terminate")) {
                         break;
                     }
@@ -76,35 +59,9 @@ public class MyServerApp {
                 out.close();
                 in.close();
                 clientSocket.close();
-                if (role.equals("SUBSCRIBER")) {
-                    removeSubscriber(topic);
-                }
 
             } catch (IOException e) {
                 System.out.println("ClientHandler error: " + e.getMessage());
-            }
-        }
-
-        private void addSubscriber(String topic) {
-            List<ClientHandler> subscribers = topicSubscribers.getOrDefault(topic, new ArrayList<>());
-            subscribers.add(this);
-            topicSubscribers.put(topic, subscribers);
-        }
-
-        private void removeSubscriber(String topic) {
-            List<ClientHandler> subscribers = topicSubscribers.getOrDefault(topic, new ArrayList<>());
-            subscribers.remove(this);
-            topicSubscribers.put(topic, subscribers);
-        }
-
-        private void publishMessage(String message, String topic) {
-            List<ClientHandler> subscribers = topicSubscribers.getOrDefault(topic, new ArrayList<>());
-            for (ClientHandler subscriber : subscribers) {
-                if (!subscriber.equals(this)) {
-                    synchronized (subscriber.out) {
-                        subscriber.out.println("Topic: " + topic + ", Message: " + message);
-                    }
-                }
             }
         }
     }
